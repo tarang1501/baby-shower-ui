@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RSVP Dashboard - Meera's Baby Shower</title>
+    <title>RSVP Dashboard - Baby Shower</title>
     <link rel="stylesheet" href="../assets/css/styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,6 +11,22 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="dashboard-body">
+    <!-- Password Protection Screen -->
+    <div id="password-screen" class="password-screen">
+        <div class="password-container">
+            <div class="password-card">
+                <i class="fas fa-lock"></i>
+                <h2>Admin Access</h2>
+                <p>Please enter the password to access the dashboard</p>
+                <input type="password" id="dashboard-password" placeholder="Enter password">
+                <button onclick="checkPassword()" class="btn-primary">Access Dashboard</button>
+                <p class="password-error" id="password-error"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Content (Hidden by default) -->
+    <div id="dashboard-content" style="display: none;">
     <!-- Dashboard Header -->
     <header class="dashboard-header">
         <div class="container">
@@ -20,8 +36,8 @@
                     RSVP Dashboard
                 </h1>
                 <div class="event-info">
-                    <h2>Meera's Baby Shower</h2>
-                    <p>Admin Panel</p>
+                    <h2>Tarang & Vidhi's Baby Shower</h2>
+                    <p>Admin Panel - Malani Family</p>
                 </div>
                 <div class="header-actions">
                     <button id="refresh-btn" class="btn-secondary">
@@ -53,11 +69,11 @@
                 
                 <div class="stat-card">
                     <div class="stat-icon">
-                        <i class="fas fa-user-check"></i>
+                        <i class="fas fa-user-friends"></i>
                     </div>
                     <div class="stat-content">
-                        <h3 class="stat-number" id="total-guests">0</h3>
-                        <p class="stat-label">Total Guests Attending</p>
+                        <h3 class="stat-number" id="total-adults">0</h3>
+                        <p class="stat-label">Total Adults</p>
                     </div>
                 </div>
                 
@@ -66,18 +82,18 @@
                         <i class="fas fa-child"></i>
                     </div>
                     <div class="stat-content">
-                        <h3 class="stat-number" id="under-15">0</h3>
-                        <p class="stat-label">Under 15 Guests</p>
+                        <h3 class="stat-number" id="total-kids">0</h3>
+                        <p class="stat-label">Total Kids</p>
                     </div>
                 </div>
                 
                 <div class="stat-card">
                     <div class="stat-icon">
-                        <i class="fas fa-users-cog"></i>
+                        <i class="fas fa-users"></i>
                     </div>
                     <div class="stat-content">
-                        <h3 class="stat-number" id="above-15">0</h3>
-                        <p class="stat-label">Above 15 Guests</p>
+                        <h3 class="stat-number" id="total-guests">0</h3>
+                        <p class="stat-label">Total Guests</p>
                     </div>
                 </div>
             </div>
@@ -94,24 +110,24 @@
                 </div>
                 
                 <div class="filter-group">
-                    <label for="filter-attending">Filter by Guests:</label>
-                    <select id="filter-attending">
+                    <label for="filter-adults">Filter by Adults:</label>
+                    <select id="filter-adults">
                         <option value="all">All</option>
-                        <option value="1">1 Guest</option>
-                        <option value="2">2 Guests</option>
-                        <option value="3">3 Guests</option>
-                        <option value="4">4+ Guests</option>
+                        <option value="1">1 Adult</option>
+                        <option value="2">2 Adults</option>
+                        <option value="3">3 Adults</option>
+                        <option value="4">4+ Adults</option>
                     </select>
                 </div>
                 
                 <div class="filter-group">
-                    <label for="filter-side">Filter by Side:</label>
-                    <select id="filter-side">
-                        <option value="all">All Sides</option>
-                        <option value="bride-side">Bride's Side</option>
-                        <option value="groom-side">Groom's Side</option>
-                        <option value="friends">Friends</option>
-                        <option value="colleagues">Colleagues</option>
+                    <label for="filter-kids">Filter by Kids:</label>
+                    <select id="filter-kids">
+                        <option value="all">All</option>
+                        <option value="0">No Kids</option>
+                        <option value="1">1 Kid</option>
+                        <option value="2">2 Kids</option>
+                        <option value="3">3+ Kids</option>
                     </select>
                 </div>
                 
@@ -157,24 +173,26 @@
                                     </button>
                                 </th>
                                 <th>
-                                    <button class="sort-btn" data-sort="attending">
-                                        Guests
+                                    <button class="sort-btn" data-sort="adults">
+                                        Adults
                                         <i class="fas fa-sort"></i>
                                     </button>
                                 </th>
                                 <th>
-                                    <button class="sort-btn" data-sort="side">
-                                        Side
+                                    <button class="sort-btn" data-sort="kids">
+                                        Kids
                                         <i class="fas fa-sort"></i>
                                     </button>
                                 </th>
                                 <th>Message</th>
+                                <th>Status</th>
                                 <th>
                                     <button class="sort-btn" data-sort="date">
                                         Date
                                         <i class="fas fa-sort"></i>
                                     </button>
                                 </th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="guest-table-body">
@@ -195,36 +213,9 @@
             </div>
         </div>
     </section>
-
-    <!-- Quick Stats -->
-    <section class="quick-stats">
-        <div class="container">
-            <div class="stats-row">
-                <div class="quick-stat">
-                    <h4>Family Side Breakdown</h4>
-                    <div class="side-stats">
-                        <div class="side-stat">
-                            <span class="side-label">Bride's Side:</span>
-                            <span class="side-count" id="bride-count">0</span>
-                        </div>
-                        <div class="side-stat">
-                            <span class="side-label">Groom's Side:</span>
-                            <span class="side-count" id="groom-count">0</span>
-                        </div>
-                        <div class="side-stat">
-                            <span class="side-label">Friends:</span>
-                            <span class="side-count" id="friends-count">0</span>
-                        </div>
-                        <div class="side-stat">
-                            <span class="side-label">Colleagues:</span>
-                            <span class="side-count" id="colleagues-count">0</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+    </div><!-- End dashboard-content -->
 
     <script src="../assets/js/dashboard.js"></script>
+    <script src="../assets/js/dashboard-auth.js"></script>
 </body>
 </html>

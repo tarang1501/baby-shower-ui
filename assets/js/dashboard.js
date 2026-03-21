@@ -6,11 +6,7 @@ let allGuests = [];
 let filteredGuests = [];
 let currentSort = { field: 'date', direction: 'desc' };
 
-// Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    initializeDashboard();
-});
-
+// Initialize dashboard - called after password authentication
 async function initializeDashboard() {
     await loadGuests();
     updateStatistics();
@@ -21,24 +17,40 @@ async function initializeDashboard() {
     initializeRefresh();
 }
 
-// Load guests from localStorage or fallback to JSON
+// Load guests from Google Apps Script
 async function loadGuests() {
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyEF842TLjaQfxPp7CZvrAWxD31vt3fFeWzgnb9n14hT_cdjixkTueV22nyfwfoGUuw/exec';
+    
+    console.log('Starting to load guests from Google Sheets...');
+    
     try {
         // Show loading
         showLoading(true);
         
-        // First try to load from localStorage
-        const storedGuests = localStorage.getItem('babyShowerGuests');
-        if (storedGuests) {
-            allGuests = JSON.parse(storedGuests);
-        } else {
-            // Fallback to JSON file
-            const response = await fetch('../assets/data/guests.json');
-            if (response.ok) {
-                allGuests = await response.json();
-            } else {
-                allGuests = [];
+        // Load from Google Apps Script
+        console.log('Fetching from:', APPS_SCRIPT_URL);
+        const response = await fetch(APPS_SCRIPT_URL, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json'
             }
+        });
+        
+        console.log('Response status:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log('Response data:', result);
+        
+        if (result.success && Array.isArray(result.rows)) {
+            allGuests = result.rows;
+            console.log('Loaded guests:', allGuests.length);
+        } else {
+            console.warn('No data returned from Google Sheets or invalid format');
+            allGuests = [];
         }
         
         filteredGuests = [...allGuests];
@@ -47,14 +59,16 @@ async function loadGuests() {
         showLoading(false);
         
         // Update UI
+        updateStatistics();
+        renderGuestTable();
         updateGuestCount();
         
     } catch (error) {
-        console.error('Error loading guests:', error);
+        console.error('Error loading guests from Google Sheets:', error);
         allGuests = [];
         filteredGuests = [];
         showLoading(false);
-        showError('Failed to load guest data');
+        showError('Failed to load guest data from Google Sheets. Please check your connection.');
     }
 }
 
@@ -64,55 +78,35 @@ function updateStatistics() {
     
     // Update main statistics
     document.getElementById('total-rsvps').textContent = stats.totalRSVPs;
+    document.getElementById('total-adults').textContent = stats.totalAdults;
+    document.getElementById('total-kids').textContent = stats.totalKids;
     document.getElementById('total-guests').textContent = stats.totalGuests;
-    document.getElementById('under-15').textContent = stats.under15;
-    document.getElementById('above-15').textContent = stats.above15;
-    
-    // Update side statistics
-    document.getElementById('bride-count').textContent = stats.brideSide;
-    document.getElementById('groom-count').textContent = stats.groomSide;
-    document.getElementById('friends-count').textContent = stats.friends;
-    document.getElementById('colleagues-count').textContent = stats.colleagues;
 }
 
 function calculateStatistics() {
     const stats = {
         totalRSVPs: allGuests.length,
+        totalAdults: 0,
+        totalKids: 0,
         totalGuests: 0,
-        under15: 0,
-        above15: 0,
-        brideSide: 0,
-        groomSide: 0,
-        friends: 0,
-        colleagues: 0
+        avgAdults: 0,
+        avgKids: 0
     };
     
     allGuests.forEach(guest => {
-        const attending = parseInt(guest.attending) || 0;
-        stats.totalGuests += attending;
+        const adults = parseInt(guest.adults) || 0;
+        const kids = parseInt(guest.kids) || 0;
         
-        if (attending <= 15) {
-            stats.under15 += attending;
-        } else {
-            stats.above15 += attending;
-        }
-        
-        // Count by family side
-        switch (guest.familySide) {
-            case 'bride-side':
-                stats.brideSide += attending;
-                break;
-            case 'groom-side':
-                stats.groomSide += attending;
-                break;
-            case 'friends':
-                stats.friends += attending;
-                break;
-            case 'colleagues':
-                stats.colleagues += attending;
-                break;
-        }
+        stats.totalAdults += adults;
+        stats.totalKids += kids;
+        stats.totalGuests += adults + kids;
     });
+    
+    // Calculate averages
+    if (stats.totalRSVPs > 0) {
+        stats.avgAdults = stats.totalAdults / stats.totalRSVPs;
+        stats.avgKids = stats.totalKids / stats.totalRSVPs;
+    }
     
     return stats;
 }
@@ -130,17 +124,27 @@ function renderGuestTable() {
     
     noData.style.display = 'none';
     
-    tbody.innerHTML = filteredGuests.map(guest => `
-        <tr>
+    tbody.innerHTML = filteredGuests.map((guest, index) => {
+        const status = guest.status || 'New';
+        const statusClass = status === 'Updated' ? 'status-updated' : 'status-new';
+        
+        return `
+        <tr data-index="${index}">
             <td>${escapeHtml(guest.firstName)} ${escapeHtml(guest.lastName)}</td>
             <td>${escapeHtml(guest.phone)}</td>
             <td>${escapeHtml(guest.email || 'N/A')}</td>
-            <td>${guest.attending}</td>
-            <td><span class="side-badge ${guest.familySide}">${formatFamilySide(guest.familySide)}</span></td>
+            <td>${guest.adults}</td>
+            <td>${guest.kids}</td>
             <td>${escapeHtml(guest.note || 'N/A')}</td>
+            <td><span class="status-badge ${statusClass}">${status}</span></td>
             <td>${formatDate(guest.timestamp)}</td>
+            <td>
+                <button class="btn-delete" onclick="deleteGuest('${escapeHtml(guest.phone)}', ${index})" title="Delete RSVP">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </td>
         </tr>
-    `).join('');
+    `}).join('');
 }
 
 // Utility functions
@@ -172,19 +176,68 @@ function formatDate(timestamp) {
     });
 }
 
+// Delete guest function
+async function deleteGuest(phone, index) {
+    if (!confirm('Are you sure you want to delete this RSVP? This action cannot be undone.')) {
+        return;
+    }
+    
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyEF842TLjaQfxPp7CZvrAWxD31vt3fFeWzgnb9n14hT_cdjixkTueV22nyfwfoGUuw/exec';
+    
+    try {
+        showLoading(true);
+        
+        // Send delete request to Google Apps Script
+        const response = await fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'text/plain;charset=utf-8'
+            },
+            body: JSON.stringify({
+                action: 'delete',
+                phone: phone
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Remove from local arrays
+            const deletedGuest = filteredGuests.splice(index, 1)[0];
+            const allIndex = allGuests.findIndex(g => g.phone === phone);
+            if (allIndex > -1) allGuests.splice(allIndex, 1);
+            
+            // Re-render table
+            renderGuestTable();
+            updateStatistics();
+            updateGuestCount();
+            
+            showSuccess('RSVP deleted successfully');
+        } else {
+            showError(result.message || 'Failed to delete RSVP');
+        }
+        
+    } catch (error) {
+        console.error('Error deleting guest:', error);
+        showError('Error deleting RSVP. Please try again.');
+    } finally {
+        showLoading(false);
+    }
+}
+
 // Initialize filters
 function initializeFilters() {
     const searchInput = document.getElementById('search-input');
-    const attendingFilter = document.getElementById('filter-attending');
-    const sideFilter = document.getElementById('filter-side');
+    const adultsFilter = document.getElementById('filter-adults');
+    const kidsFilter = document.getElementById('filter-kids');
     const clearFiltersBtn = document.getElementById('clear-filters');
     
     // Search functionality
     searchInput.addEventListener('input', applyFilters);
     
     // Filter dropdowns
-    attendingFilter.addEventListener('change', applyFilters);
-    sideFilter.addEventListener('change', applyFilters);
+    adultsFilter.addEventListener('change', applyFilters);
+    kidsFilter.addEventListener('change', applyFilters);
     
     // Clear filters
     clearFiltersBtn.addEventListener('click', clearFilters);
@@ -192,8 +245,8 @@ function initializeFilters() {
 
 function applyFilters() {
     const searchTerm = document.getElementById('search-input').value.toLowerCase();
-    const attendingFilter = document.getElementById('filter-attending').value;
-    const sideFilter = document.getElementById('filter-side').value;
+    const adultsFilter = document.getElementById('filter-adults').value;
+    const kidsFilter = document.getElementById('filter-kids').value;
     
     filteredGuests = allGuests.filter(guest => {
         // Search filter
@@ -203,14 +256,15 @@ function applyFilters() {
             guest.phone.includes(searchTerm) ||
             (guest.email && guest.email.toLowerCase().includes(searchTerm));
         
-        // Attending filter
-        const matchesAttending = attendingFilter === 'all' || 
-            (attendingFilter === '4+' ? parseInt(guest.attending) >= 4 : guest.attending === attendingFilter);
+        // Adults filter
+        const matchesAdults = adultsFilter === 'all' || 
+            (adultsFilter === '4+' ? parseInt(guest.adults) >= 4 : guest.adults === adultsFilter);
         
-        // Side filter
-        const matchesSide = sideFilter === 'all' || guest.familySide === sideFilter;
+        // Kids filter
+        const matchesKids = kidsFilter === 'all' || 
+            (kidsFilter === '3+' ? parseInt(guest.kids) >= 3 : guest.kids === kidsFilter);
         
-        return matchesSearch && matchesAttending && matchesSide;
+        return matchesSearch && matchesAdults && matchesKids;
     });
     
     // Apply current sort
@@ -221,8 +275,8 @@ function applyFilters() {
 
 function clearFilters() {
     document.getElementById('search-input').value = '';
-    document.getElementById('filter-attending').value = 'all';
-    document.getElementById('filter-side').value = 'all';
+    document.getElementById('filter-adults').value = 'all';
+    document.getElementById('filter-kids').value = 'all';
     
     filteredGuests = [...allGuests];
     sortGuests();
@@ -286,13 +340,13 @@ function sortGuests() {
                 aValue = a.email || '';
                 bValue = b.email || '';
                 break;
-            case 'attending':
-                aValue = parseInt(a.attending) || 0;
-                bValue = parseInt(b.attending) || 0;
+            case 'adults':
+                aValue = parseInt(a.adults) || 0;
+                bValue = parseInt(b.adults) || 0;
                 break;
-            case 'side':
-                aValue = a.familySide;
-                bValue = b.familySide;
+            case 'kids':
+                aValue = parseInt(a.kids) || 0;
+                bValue = parseInt(b.kids) || 0;
                 break;
             case 'date':
                 aValue = new Date(a.timestamp || 0);
@@ -321,16 +375,17 @@ function exportToCSV() {
     
     try {
         // Create CSV content
-        const headers = ['Name', 'Phone', 'Email', 'Guests Attending', 'Family Side', 'Message', 'RSVP Date'];
+        const headers = ['Name', 'Phone', 'Email', 'Adults', 'Kids', 'Message', 'Status', 'RSVP Date'];
         const csvContent = [
             headers.join(','),
             ...filteredGuests.map(guest => [
                 `"${guest.firstName} ${guest.lastName}"`,
                 `"${guest.phone}"`,
                 `"${guest.email || ''}"`,
-                guest.attending,
-                `"${formatFamilySide(guest.familySide)}"`,
+                guest.adults,
+                guest.kids,
                 `"${(guest.note || '').replace(/"/g, '""')}"`,
+                `"${guest.status || 'New'}"`,
                 `"${formatDate(guest.timestamp)}"`
             ].join(','))
         ].join('\n');

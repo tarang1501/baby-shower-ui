@@ -1,6 +1,15 @@
 # Baby Shower Invitation Website 🍼💕
 
-A beautiful, elegant baby shower invitation website with Indian/Gujarati theme, featuring RSVP functionality and an admin dashboard.
+A beautiful, elegant baby shower invitation website for Tarang & Vidhi's celebration, featuring RSVP functionality and an admin dashboard.
+
+## Event Details 🎉
+
+- **Parents:** Tarang & Vidhi
+- **Hosted by:** Malani Family
+- **Date:** June 28, 2026
+- **Time:** 9:30 AM
+- **Theme:** Royal but Cute
+- **Culture:** Gujarati / Indian Celebration
 
 ## Features ✨
 

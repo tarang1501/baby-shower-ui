@@ -16,7 +16,6 @@ function initializeApp() {
     initializeRSVPForm();
     initializeMusicToggle();
     initializeScrollEffects();
-    initializeGallery();
 }
 
 // Load guests from localStorage or fallback to JSON
@@ -41,8 +40,8 @@ async function loadGuests() {
 
 // Countdown Timer
 function initializeCountdown() {
-    // Set the event date (April 14, 2024, 10:00 AM)
-    const eventDate = new Date('April 14, 2024 10:00:00').getTime();
+    // Set the event date (June 28, 2026, 9:30 AM)
+    const eventDate = new Date('June 28, 2026 09:30:00').getTime();
     
     function updateCountdown() {
         const now = new Date().getTime();
@@ -89,10 +88,9 @@ function initializeRSVPForm() {
             lastName: formData.get('lastName').trim(),
             phone: formData.get('phone').trim(),
             email: formData.get('email').trim(),
-            attending: formData.get('attending'),
-            familySide: formData.get('familySide'),
-            note: formData.get('note').trim(),
-            timestamp: new Date().toISOString()
+            adults: parseInt(formData.get('adults')) || 0,
+            kids: parseInt(formData.get('kids')) || 0,
+            note: formData.get('note').trim()
         };
         
         // Validate required fields
@@ -100,47 +98,85 @@ function initializeRSVPForm() {
             return;
         }
         
-        // Save to localStorage
+        // Show loading state
+        const submitBtn = form.querySelector('.btn-submit');
+        const originalBtnText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+        submitBtn.disabled = true;
+        
+        // Submit to Google Apps Script
         try {
-            guests.push(guestData);
-            localStorage.setItem('babyShowerGuests', JSON.stringify(guests));
+            const response = await submitToGoogleSheets(guestData);
             
-            // Show success message
-            showSuccessMessage();
-            
-            // Reset form
-            form.reset();
-            
-            // Log for debugging (in production, you might send to a server)
-            console.log('RSVP submitted:', guestData);
-            
-            // TODO: Later replace with Google Sheets API or backend
-            // await submitToBackend(guestData);
+            if (response.success) {
+                // Show success message
+                showSuccessMessage(response.message || 'Thank you! Your RSVP has been received.');
+                
+                // Reset form
+                form.reset();
+            } else {
+                showError(response.message || 'There was an error submitting your RSVP. Please try again.');
+            }
             
         } catch (error) {
-            console.error('Error saving RSVP:', error);
-            showError('There was an error saving your RSVP. Please try again.');
+            console.error('Error submitting RSVP:', error);
+            showError('There was an error submitting your RSVP. Please try again.');
+        } finally {
+            // Restore button state
+            submitBtn.innerHTML = originalBtnText;
+            submitBtn.disabled = false;
         }
     });
+}
+
+// Submit to Google Apps Script Web App
+async function submitToGoogleSheets(data) {
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyEF842TLjaQfxPp7CZvrAWxD31vt3fFeWzgnb9n14hT_cdjixkTueV22nyfwfoGUuw/exec';
+    
+    try {
+        const response = await fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'text/plain;charset=utf-8'
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        return result;
+        
+    } catch (error) {
+        console.error('Error submitting to Google Sheets:', error);
+        return { success: false, message: 'Network error. Please try again.' };
+    }
 }
 
 function validateRSVPForm(data) {
     const errors = [];
     
     if (!data.firstName) errors.push('First name is required');
-    if (!data.lastName) errors.push('Last name is required');
     if (!data.phone) errors.push('Phone number is required');
-    if (!data.attending) errors.push('Number of guests is required');
-    if (!data.familySide) errors.push('Family side is required');
     
     // Validate phone format
     if (data.phone && !isValidPhone(data.phone)) {
         errors.push('Please enter a valid phone number');
     }
     
-    // Validate email format if provided
+    // Validate email format only if email is provided (optional field)
     if (data.email && !isValidEmail(data.email)) {
         errors.push('Please enter a valid email address');
+    }
+    
+    // Validate adults and kids are numbers
+    if (typeof data.adults !== 'number' || data.adults < 0) {
+        errors.push('Please enter a valid number of adults');
+    }
+    if (typeof data.kids !== 'number' || data.kids < 0) {
+        errors.push('Please enter a valid number of kids');
     }
     
     if (errors.length > 0) {
@@ -162,17 +198,30 @@ function isValidEmail(email) {
     return emailRegex.test(email);
 }
 
-function showSuccessMessage() {
+function showSuccessMessage(message = 'Thank you! Your RSVP has been received.') {
     const successMessage = document.getElementById('success-message');
+    
+    // Update message text
+    const messageEl = successMessage.querySelector('p') || successMessage;
+    if (messageEl.tagName === 'P') {
+        messageEl.textContent = message;
+    }
+    
     successMessage.classList.add('show');
+    
+    // Add WhatsApp confirmation button
+    addWhatsAppButton();
     
     // Scroll to success message
     successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
     
-    // Hide after 5 seconds
+    // Hide after 8 seconds (longer to allow WhatsApp click)
     setTimeout(() => {
         successMessage.classList.remove('show');
-    }, 5000);
+        // Remove WhatsApp button when hiding
+        const whatsappBtn = document.getElementById('whatsapp-confirm-btn');
+        if (whatsappBtn) whatsappBtn.remove();
+    }, 8000);
 }
 
 function showError(message) {
@@ -208,6 +257,33 @@ function showError(message) {
     }, 5000);
 }
 
+// Add WhatsApp confirmation button
+function addWhatsAppButton() {
+    const successMessage = document.getElementById('success-message');
+    
+    // Remove existing button if any
+    const existingBtn = document.getElementById('whatsapp-confirm-btn');
+    if (existingBtn) existingBtn.remove();
+    
+    const whatsappBtn = document.createElement('button');
+    whatsappBtn.id = 'whatsapp-confirm-btn';
+    whatsappBtn.className = 'btn-whatsapp';
+    whatsappBtn.innerHTML = '<i class="fab fa-whatsapp"></i> Send WhatsApp Confirmation';
+    whatsappBtn.onclick = openWhatsAppConfirmation;
+    
+    successMessage.appendChild(whatsappBtn);
+}
+
+// Open WhatsApp with confirmation message
+function openWhatsAppConfirmation() {
+    const message = "Hi, your RSVP for Tarang & Vidhi's Baby Shower on June 28, 2026 at 9:30 AM has been received. Hosted by Malani Family. Thank you!";
+    const encodedMessage = encodeURIComponent(message);
+    
+    // Try to open WhatsApp
+    const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
+    window.open(whatsappUrl, '_blank');
+}
+
 // Music Toggle
 function initializeMusicToggle() {
     const musicToggle = document.getElementById('music-toggle');
@@ -215,15 +291,26 @@ function initializeMusicToggle() {
     
     if (!musicToggle || !backgroundMusic) return;
     
+    // Try to autoplay on page load
+    backgroundMusic.volume = 0.5; // Set volume to 50%
+    backgroundMusic.play().then(() => {
+        // Autoplay succeeded
+        isPlaying = true;
+        musicToggle.classList.add('playing');
+        musicToggle.innerHTML = '<i class="fas fa-pause"></i>';
+    }).catch(error => {
+        // Autoplay blocked by browser, wait for user interaction
+        console.log('Music autoplay blocked:', error);
+    });
+    
     musicToggle.addEventListener('click', function() {
         if (isPlaying) {
             backgroundMusic.pause();
             musicToggle.classList.remove('playing');
             musicToggle.innerHTML = '<i class="fas fa-music"></i>';
         } else {
-            // Note: Autoplay may be blocked by browsers
             backgroundMusic.play().catch(error => {
-                console.log('Music autoplay blocked:', error);
+                console.log('Music playback error:', error);
                 showError('Music playback was blocked by your browser. Click to enable.');
             });
             musicToggle.classList.add('playing');
@@ -232,11 +319,10 @@ function initializeMusicToggle() {
         isPlaying = !isPlaying;
     });
     
-    // Handle music end
+    // Handle music end - loop it
     backgroundMusic.addEventListener('ended', function() {
-        isPlaying = false;
-        musicToggle.classList.remove('playing');
-        musicToggle.innerHTML = '<i class="fas fa-music"></i>';
+        backgroundMusic.currentTime = 0;
+        backgroundMusic.play().catch(() => {});
     });
 }
 
@@ -280,154 +366,104 @@ function initializeScrollEffects() {
     });
 }
 
-// Gallery Lightbox
-function initializeGallery() {
-    const galleryItems = document.querySelectorAll('.gallery-item');
-    let currentImageIndex = 0;
+// Edit RSVP Lookup - Find existing RSVP by phone and prefill form
+async function lookupRSVPByPhone(phone) {
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyEF842TLjaQfxPp7CZvrAWxD31vt3fFeWzgnb9n14hT_cdjixkTueV22nyfwfoGUuw/exec';
     
-    galleryItems.forEach((item, index) => {
-        item.addEventListener('click', function() {
-            currentImageIndex = index;
-            createLightbox(this.querySelector('img').src, this.querySelector('img').alt);
+    try {
+        const response = await fetch(APPS_SCRIPT_URL, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' }
         });
-    });
-}
-
-function createLightbox(src, alt) {
-    // Create lightbox elements
-    const lightbox = document.createElement('div');
-    lightbox.className = 'lightbox';
-    lightbox.innerHTML = `
-        <div class="lightbox-content">
-            <img src="${src}" alt="${alt}">
-            <button class="lightbox-close">&times;</button>
-            <button class="lightbox-prev">&lt;</button>
-            <button class="lightbox-next">&gt;</button>
-        </div>
-    `;
-    
-    // Add styles
-    lightbox.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.9);
-        z-index: 10000;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        animation: fadeIn 0.3s ease;
-    `;
-    
-    const content = lightbox.querySelector('.lightbox-content');
-    content.style.cssText = `
-        position: relative;
-        max-width: 90%;
-        max-height: 90%;
-    `;
-    
-    const img = lightbox.querySelector('img');
-    img.style.cssText = `
-        width: 100%;
-        height: auto;
-        max-height: 90vh;
-        object-fit: contain;
-    `;
-    
-    // Button styles
-    const buttonStyle = `
-        position: absolute;
-        background: rgba(255,255,255,0.2);
-        border: none;
-        color: white;
-        font-size: 2rem;
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    `;
-    
-    lightbox.querySelector('.lightbox-close').style.cssText = `
-        ${buttonStyle}
-        top: 20px;
-        right: 20px;
-    `;
-    
-    lightbox.querySelector('.lightbox-prev').style.cssText = `
-        ${buttonStyle}
-        top: 50%;
-        left: 20px;
-        transform: translateY(-50%);
-    `;
-    
-    lightbox.querySelector('.lightbox-next').style.cssText = `
-        ${buttonStyle}
-        top: 50%;
-        right: 20px;
-        transform: translateY(-50%);
-    `;
-    
-    document.body.appendChild(lightbox);
-    document.body.style.overflow = 'hidden';
-    
-    // Event listeners
-    lightbox.querySelector('.lightbox-close').addEventListener('click', closeLightbox);
-    lightbox.querySelector('.lightbox-prev').addEventListener('click', previousImage);
-    lightbox.querySelector('.lightbox-next').addEventListener('click', nextImage);
-    lightbox.addEventListener('click', function(e) {
-        if (e.target === lightbox) closeLightbox();
-    });
-    
-    // Keyboard navigation
-    document.addEventListener('keydown', handleLightboxKeyboard);
-}
-
-function closeLightbox() {
-    const lightbox = document.querySelector('.lightbox');
-    if (lightbox) {
-        lightbox.style.animation = 'fadeOut 0.3s ease';
-        setTimeout(() => {
-            lightbox.remove();
-            document.body.style.overflow = '';
-            document.removeEventListener('keydown', handleLightboxKeyboard);
-        }, 300);
+        
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        
+        const result = await response.json();
+        
+        if (result.success && Array.isArray(result.rows)) {
+            const normalizedPhone = phone.replace(/\D/g, '');
+            return result.rows.find(g => g.phone && g.phone.replace(/\D/g, '') === normalizedPhone) || null;
+        }
+        return null;
+    } catch (error) {
+        console.error('Error looking up RSVP:', error);
+        return null;
     }
 }
 
-function nextImage() {
-    const galleryItems = document.querySelectorAll('.gallery-item');
-    currentImageIndex = (currentImageIndex + 1) % galleryItems.length;
-    updateLightboxImage();
+function prefillRSVPForm(guestData) {
+    const form = document.getElementById('rsvp-form');
+    if (!form || !guestData) return;
+    
+    form.querySelector('[name="firstName"]').value = guestData.firstName || '';
+    form.querySelector('[name="lastName"]').value = guestData.lastName || '';
+    form.querySelector('[name="phone"]').value = guestData.phone || '';
+    form.querySelector('[name="email"]').value = guestData.email || '';
+    form.querySelector('[name="adults"]').value = guestData.adults || 0;
+    form.querySelector('[name="kids"]').value = guestData.kids || 0;
+    form.querySelector('[name="note"]').value = guestData.note || '';
+    
+    form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    showUpdateModeIndicator();
 }
 
-function previousImage() {
-    const galleryItems = document.querySelectorAll('.gallery-item');
-    currentImageIndex = (currentImageIndex - 1 + galleryItems.length) % galleryItems.length;
-    updateLightboxImage();
+function showUpdateModeIndicator() {
+    const existing = document.getElementById('update-mode-indicator');
+    if (existing) existing.remove();
+    
+    const indicator = document.createElement('div');
+    indicator.id = 'update-mode-indicator';
+    indicator.className = 'update-mode-indicator';
+    indicator.innerHTML = '<i class="fas fa-edit"></i> Update Mode: Editing existing RSVP';
+    
+    const form = document.getElementById('rsvp-form');
+    if (form) form.insertBefore(indicator, form.firstChild);
 }
 
-function updateLightboxImage() {
-    const galleryItems = document.querySelectorAll('.gallery-item');
-    const img = document.querySelector('.lightbox img');
-    if (img && galleryItems[currentImageIndex]) {
-        const newSrc = galleryItems[currentImageIndex].querySelector('img').src;
-        const newAlt = galleryItems[currentImageIndex].querySelector('img').alt;
-        img.src = newSrc;
-        img.alt = newAlt;
+// Edit RSVP UI Handlers
+function showEditLookup(event) {
+    event.preventDefault();
+    const lookupForm = document.getElementById('edit-lookup-form');
+    if (lookupForm) {
+        lookupForm.style.display = lookupForm.style.display === 'none' ? 'flex' : 'none';
     }
 }
 
-function handleLightboxKeyboard(e) {
-    if (e.key === 'Escape') closeLightbox();
-    if (e.key === 'ArrowRight') nextImage();
-    if (e.key === 'ArrowLeft') previousImage();
+async function handleEditLookup() {
+    const phoneInput = document.getElementById('lookup-phone');
+    const phone = phoneInput.value.trim();
+    
+    if (!phone) {
+        showError('Please enter your phone number');
+        return;
+    }
+    
+    // Show loading
+    const btn = document.querySelector('#edit-lookup-form button');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Looking up...';
+    btn.disabled = true;
+    
+    try {
+        const guestData = await lookupRSVPByPhone(phone);
+        
+        if (guestData) {
+            prefillRSVPForm(guestData);
+            document.getElementById('edit-lookup-form').style.display = 'none';
+            phoneInput.value = '';
+            showSuccessMessage('RSVP found! You can now update your details.');
+        } else {
+            showError('No RSVP found with that phone number. Please submit a new RSVP.');
+        }
+    } catch (error) {
+        console.error('Error looking up RSVP:', error);
+        showError('Error looking up RSVP. Please try again.');
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
 }
+
 
 // Utility functions
 function formatPhoneNumber(input) {
@@ -437,6 +473,24 @@ function formatPhoneNumber(input) {
     if (phoneNumberLength < 4) return phoneNumber;
     if (phoneNumberLength < 7) return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3)}`;
     return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6, 10)}`;
+}
+
+// Counter input function for adults/kids +/- buttons
+function updateCounter(fieldId, change) {
+    const input = document.getElementById(fieldId);
+    if (!input) return;
+    
+    let value = parseInt(input.value) || 0;
+    const min = parseInt(input.min) || 0;
+    const max = parseInt(input.max) || 20;
+    
+    value += change;
+    
+    // Enforce min/max limits
+    if (value < min) value = min;
+    if (value > max) value = max;
+    
+    input.value = value;
 }
 
 // Add phone formatting to input
