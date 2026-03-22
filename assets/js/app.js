@@ -214,19 +214,13 @@ function showSuccessMessage(message = 'Thank you! Your RSVP has been received.')
     
     successMessage.classList.add('show');
     
-    // Add WhatsApp confirmation button
-    addWhatsAppButton();
-    
     // Scroll to success message
     successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
     
-    // Hide after 8 seconds (longer to allow WhatsApp click)
+    // Hide after 5 seconds
     setTimeout(() => {
         successMessage.classList.remove('show');
-        // Remove WhatsApp button when hiding
-        const whatsappBtn = document.getElementById('whatsapp-confirm-btn');
-        if (whatsappBtn) whatsappBtn.remove();
-    }, 8000);
+    }, 5000);
 }
 
 function showError(message) {
@@ -260,44 +254,6 @@ function showError(message) {
         errorDiv.style.animation = 'slideOutRight 0.3s ease';
         setTimeout(() => errorDiv.remove(), 300);
     }, 5000);
-}
-
-// Add WhatsApp confirmation button
-function addWhatsAppButton() {
-    const successMessage = document.getElementById('success-message');
-    
-    // Remove existing button if any
-    const existingBtn = document.getElementById('whatsapp-confirm-btn');
-    if (existingBtn) existingBtn.remove();
-    
-    const whatsappBtn = document.createElement('button');
-    whatsappBtn.id = 'whatsapp-confirm-btn';
-    whatsappBtn.className = 'btn-whatsapp';
-    whatsappBtn.innerHTML = '<i class="fab fa-whatsapp"></i> Send WhatsApp Confirmation';
-    whatsappBtn.onclick = openWhatsAppConfirmation;
-    
-    successMessage.appendChild(whatsappBtn);
-}
-
-// Open WhatsApp with confirmation message (FREE version - no Twilio)
-function openWhatsAppConfirmation() {
-    const eventDate = new Date(window.APP_CONFIG.EVENT_DATE);
-    const dateStr = eventDate.toLocaleDateString('en-US', { 
-        month: 'long', 
-        day: 'numeric', 
-        year: 'numeric' 
-    });
-    const timeStr = eventDate.toLocaleTimeString('en-US', { 
-        hour: 'numeric', 
-        minute: '2-digit' 
-    });
-    
-    const message = `Your RSVP for ${window.APP_CONFIG.EVENT_TITLE} on ${dateStr} at ${timeStr} is confirmed. Hosted by Malani Family. We can't wait to celebrate with you!`;
-    const encodedMessage = encodeURIComponent(message);
-    
-    // Open WhatsApp Web or App
-    const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
-    window.open(whatsappUrl, '_blank');
 }
 
 // Music Toggle
