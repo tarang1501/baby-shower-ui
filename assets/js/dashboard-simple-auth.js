@@ -1,6 +1,6 @@
 // Dashboard Password Authentication
-// Password validated against backend - no hardcoded password in frontend
-// Frontend security is limited; backend validation required
+// Frontend sends password to backend for validation
+// No password or hash stored in frontend
 
 // Check authentication on page load
 document.addEventListener('DOMContentLoaded', function() {
@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function checkAuthentication() {
-    const isAuthenticated = sessionStorage.getItem(window.APP_CONFIG.AUTH_SESSION_KEY);
+    const isAuthenticated = sessionStorage.getItem('dashboardAuthenticated');
     
     if (isAuthenticated === "true") {
         showDashboard();
@@ -32,14 +32,14 @@ function showDashboard() {
     if (passwordScreen) passwordScreen.style.display = 'none';
     if (dashboardContent) dashboardContent.style.display = 'block';
     
-    sessionStorage.setItem(window.APP_CONFIG.AUTH_SESSION_KEY, "true");
+    sessionStorage.setItem('dashboardAuthenticated', "true");
     
     if (typeof initializeDashboard === 'function') {
         initializeDashboard();
     }
 }
 
-// Validate password with backend
+// Send password to backend for validation
 async function checkPassword() {
     const passwordInput = document.getElementById('dashboard-password');
     const errorElement = document.getElementById('password-error');
@@ -96,7 +96,6 @@ async function checkPassword() {
         }
         
     } catch (error) {
-        // Do not log sensitive data
         console.error('Error validating password');
         if (errorElement) {
             errorElement.textContent = 'Network error. Please try again.';
@@ -112,7 +111,7 @@ async function checkPassword() {
 
 // Logout function
 function logout() {
-    sessionStorage.removeItem(window.APP_CONFIG.AUTH_SESSION_KEY);
+    sessionStorage.removeItem('dashboardAuthenticated');
     showPasswordScreen();
 }
 
