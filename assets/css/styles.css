@@ -93,12 +93,14 @@ h1, h2, h3, h4 {
 /* Hero Section */
 .hero {
     min-height: 100vh;
-    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-surface) 50%, var(--accent-sage) 100%);
+    background: linear-gradient(160deg, #E8DED0 0%, #D4C8B8 50%, #C4B8A8 100%);
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
     overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 .hero::before {
@@ -990,22 +992,55 @@ h1, h2, h3, h4 {
     color: #f57c00;
 }
 
-/* Responsive Design */
+/* Responsive Design - Cross-Browser Mobile Support */
+
+/* Tablet and below */
 @media (max-width: 768px) {
     .container {
         padding: 0 15px;
+        padding-left: max(15px, env(safe-area-inset-left));
+        padding-right: max(15px, env(safe-area-inset-right));
+    }
+    
+    .hero {
+        min-height: 100vh;
+        min-height: -webkit-fill-available;
+        padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+    }
+    
+    .hero-content {
+        padding: 1.5rem;
+        width: 100%;
+    }
+    
+    .main-title {
+        padding: 2rem 1.5rem;
+        margin: 0 0.5rem 1.5rem;
     }
     
     .baby-name {
-        font-size: 3rem;
+        font-size: 2.2rem;
+    }
+    
+    .celebration-title {
+        font-size: 1.4rem;
     }
     
     .countdown {
         gap: 1rem;
+        padding: 0 0.5rem;
+    }
+    
+    .countdown-item {
+        min-width: 70px;
     }
     
     .countdown-number {
-        font-size: 2rem;
+        font-size: 1.8rem;
+    }
+    
+    .countdown-label {
+        font-size: 0.75rem;
     }
     
     .form-row {
@@ -1014,21 +1049,30 @@ h1, h2, h3, h4 {
     }
     
     .rsvp-form {
-        padding: 2rem 1.5rem;
+        padding: 1.5rem;
+        margin: 0 0.5rem;
+    }
+    
+    .section-title {
+        font-size: 2rem;
+        margin-bottom: 2rem;
     }
     
     .header-content {
         flex-direction: column;
         text-align: center;
+        gap: 1rem;
     }
     
     .filters-content {
         flex-direction: column;
         align-items: stretch;
+        gap: 1rem;
     }
     
     .search-box {
         min-width: auto;
+        width: 100%;
     }
     
     .footer-actions {
@@ -1037,42 +1081,242 @@ h1, h2, h3, h4 {
     }
     
     .stats-grid {
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        grid-template-columns: repeat(2, 1fr);
         gap: 1rem;
     }
     
-    .side-stats {
-        grid-template-columns: 1fr;
+    .stat-card {
+        padding: 1.5rem 1rem;
+    }
+    
+    .stat-number {
+        font-size: 1.8rem;
+    }
+    
+    .music-toggle {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+        bottom: 20px;
+        right: 20px;
+    }
+    
+    .btn-primary, .btn-secondary, .btn-submit {
+        padding: 0.875rem 1.5rem;
+        min-height: 44px;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    .counter-btn {
+        width: 36px;
+        height: 36px;
+        min-height: 44px;
+        min-width: 44px;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        font-size: 16px;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        border-radius: 10px;
+    }
+    
+    .edit-lookup-form {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .edit-lookup-form input {
+        min-width: auto;
+        width: 100%;
     }
 }
 
+/* Small phones */
 @media (max-width: 480px) {
+    .container {
+        padding: 0 12px;
+    }
+    
+    .hero-content {
+        padding: 1rem;
+    }
+    
     .main-title {
-        padding: 2rem 1.5rem;
+        padding: 1.5rem 1rem;
+        border-radius: 15px;
+    }
+    
+    .baby-name {
+        font-size: 1.6rem;
+    }
+    
+    .family-name {
+        font-size: 1.4rem;
+    }
+    
+    .invitation-prefix {
+        font-size: 1rem;
+    }
+    
+    .celebration-title {
+        font-size: 1.2rem;
+    }
+    
+    .celebration-text {
+        font-size: 0.95rem;
+    }
+    
+    .countdown {
+        gap: 0.5rem;
+    }
+    
+    .countdown-item {
+        min-width: 60px;
+    }
+    
+    .countdown-number {
+        font-size: 1.5rem;
+    }
+    
+    .countdown-label {
+        font-size: 0.7rem;
+    }
+    
+    .countdown-container {
+        padding: 1.5rem 1rem;
+        margin: 0 0.5rem;
+    }
+    
+    .section-title {
+        font-size: 1.6rem;
+    }
+    
+    .details-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .detail-card {
+        padding: 1.5rem;
+    }
+    
+    .rsvp-form {
+        padding: 1.25rem;
+    }
+    
+    .welcome-message {
+        padding: 1.5rem;
+    }
+    
+    .welcome-message p {
+        font-size: 1rem;
+    }
+    
+    .counter-input {
+        padding: 0.5rem 1rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+    }
+    
+    .stat-card {
+        padding: 1.25rem 0.75rem;
+    }
+    
+    .stat-number {
+        font-size: 1.5rem;
+    }
+    
+    .footer {
+        padding: 2rem 0;
+    }
+    
+    .footer-text {
+        font-size: 1.1rem;
+    }
+}
+
+/* Extra small devices */
+@media (max-width: 360px) {
+    .baby-name {
+        font-size: 1.4rem;
+    }
+    
+    .main-title {
+        padding: 1.25rem 0.75rem;
+    }
+    
+    .countdown-number {
+        font-size: 1.3rem;
+    }
+    
+    .btn-primary, .btn-secondary, .btn-submit {
+        padding: 0.75rem 1.25rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* Landscape mode on mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+    .hero {
+        min-height: auto;
+        padding: 4rem 0;
+    }
+    
+    .main-title {
+        padding: 1.5rem;
     }
     
     .baby-name {
         font-size: 2rem;
     }
     
-    .celebration-text {
-        font-size: 1rem;
+    .scroll-indicator {
+        display: none;
+    }
+}
+
+/* iOS Safari specific fixes */
+@supports (-webkit-touch-callout: none) {
+    .hero {
+        min-height: -webkit-fill-available;
     }
     
-    .section-title {
-        font-size: 2rem;
+    input, textarea, select {
+        font-size: 16px !important;
+    }
+}
+
+/* Firefox Android fixes */
+@-moz-document url-prefix() {
+    .hero {
+        min-height: 100vh;
+    }
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
     }
     
-    .details-grid {
-        grid-template-columns: 1fr;
+    .scroll-indicator {
+        animation: none;
     }
     
-    .gallery-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .family-grid {
-        grid-template-columns: 1fr;
+    .music-toggle.playing {
+        animation: none;
     }
 }
 
