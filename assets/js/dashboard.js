@@ -19,56 +19,39 @@ async function initializeDashboard() {
 
 // Load guests from Google Apps Script
 async function loadGuests() {
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyEF842TLjaQfxPp7CZvrAWxD31vt3fFeWzgnb9n14hT_cdjixkTueV22nyfwfoGUuw/exec';
-    
-    console.log('Starting to load guests from Google Sheets...');
-    
+    // Frontend security is limited; backend validation required
     try {
-        // Show loading
         showLoading(true);
         
-        // Load from Google Apps Script
-        console.log('Fetching from:', APPS_SCRIPT_URL);
-        const response = await fetch(APPS_SCRIPT_URL, {
+        const url = window.APP_CONFIG.SCRIPT_URL + "?secret=" + encodeURIComponent(window.APP_CONFIG.SECRET_KEY);
+        const response = await fetch(url, {
             method: 'GET',
-            headers: {
-                'Accept': 'application/json'
-            }
+            headers: { 'Accept': 'application/json' }
         });
         
-        console.log('Response status:', response.status);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         
         const result = await response.json();
-        console.log('Response data:', result);
         
         if (result.success && Array.isArray(result.rows)) {
             allGuests = result.rows;
-            console.log('Loaded guests:', allGuests.length);
         } else {
-            console.warn('No data returned from Google Sheets or invalid format');
             allGuests = [];
         }
         
         filteredGuests = [...allGuests];
-        
-        // Hide loading
         showLoading(false);
-        
-        // Update UI
         updateStatistics();
         renderGuestTable();
         updateGuestCount();
         
     } catch (error) {
-        console.error('Error loading guests from Google Sheets:', error);
+        // Do not log sensitive data
+        console.error('Error loading guests');
         allGuests = [];
         filteredGuests = [];
         showLoading(false);
-        showError('Failed to load guest data from Google Sheets. Please check your connection.');
+        showError('Failed to load guest data. Please check your connection.');
     }
 }
 
@@ -182,20 +165,20 @@ async function deleteGuest(phone, index) {
         return;
     }
     
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyEF842TLjaQfxPp7CZvrAWxD31vt3fFeWzgnb9n14hT_cdjixkTueV22nyfwfoGUuw/exec';
-    
+    // Frontend security is limited; backend validation required
     try {
         showLoading(true);
         
-        // Send delete request to Google Apps Script
-        const response = await fetch(APPS_SCRIPT_URL, {
+        // Send delete request to Google Apps Script with secret
+        const response = await fetch(window.APP_CONFIG.SCRIPT_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'text/plain;charset=utf-8'
             },
             body: JSON.stringify({
                 action: 'delete',
-                phone: phone
+                phone: phone,
+                secret: window.APP_CONFIG.SECRET_KEY
             })
         });
         

@@ -131,15 +131,19 @@ function initializeRSVPForm() {
 
 // Submit to Google Apps Script Web App
 async function submitToGoogleSheets(data) {
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyEF842TLjaQfxPp7CZvrAWxD31vt3fFeWzgnb9n14hT_cdjixkTueV22nyfwfoGUuw/exec';
+    // Frontend security is limited; backend validation required
+    const payload = {
+        ...data,
+        secret: window.APP_CONFIG.SECRET_KEY
+    };
     
     try {
-        const response = await fetch(APPS_SCRIPT_URL, {
+        const response = await fetch(window.APP_CONFIG.SCRIPT_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'text/plain;charset=utf-8'
             },
-            body: JSON.stringify(data)
+            body: JSON.stringify(payload)
         });
         
         if (!response.ok) {
@@ -150,7 +154,8 @@ async function submitToGoogleSheets(data) {
         return result;
         
     } catch (error) {
-        console.error('Error submitting to Google Sheets:', error);
+        // Do not log sensitive data
+        console.error('Error submitting RSVP');
         return { success: false, message: 'Network error. Please try again.' };
     }
 }
@@ -274,12 +279,23 @@ function addWhatsAppButton() {
     successMessage.appendChild(whatsappBtn);
 }
 
-// Open WhatsApp with confirmation message
+// Open WhatsApp with confirmation message (FREE version - no Twilio)
 function openWhatsAppConfirmation() {
-    const message = "Hi, your RSVP for Tarang & Vidhi's Baby Shower on June 28, 2026 at 9:30 AM has been received. Hosted by Malani Family. Thank you!";
+    const eventDate = new Date(window.APP_CONFIG.EVENT_DATE);
+    const dateStr = eventDate.toLocaleDateString('en-US', { 
+        month: 'long', 
+        day: 'numeric', 
+        year: 'numeric' 
+    });
+    const timeStr = eventDate.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit' 
+    });
+    
+    const message = `Your RSVP for ${window.APP_CONFIG.EVENT_TITLE} on ${dateStr} at ${timeStr} is confirmed. Hosted by Malani Family. We can't wait to celebrate with you!`;
     const encodedMessage = encodeURIComponent(message);
     
-    // Try to open WhatsApp
+    // Open WhatsApp Web or App
     const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
     window.open(whatsappUrl, '_blank');
 }
@@ -368,10 +384,10 @@ function initializeScrollEffects() {
 
 // Edit RSVP Lookup - Find existing RSVP by phone and prefill form
 async function lookupRSVPByPhone(phone) {
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyEF842TLjaQfxPp7CZvrAWxD31vt3fFeWzgnb9n14hT_cdjixkTueV22nyfwfoGUuw/exec';
-    
+    // Frontend security is limited; backend validation required
     try {
-        const response = await fetch(APPS_SCRIPT_URL, {
+        const url = window.APP_CONFIG.SCRIPT_URL + "?secret=" + encodeURIComponent(window.APP_CONFIG.SECRET_KEY);
+        const response = await fetch(url, {
             method: 'GET',
             headers: { 'Accept': 'application/json' }
         });
@@ -386,7 +402,8 @@ async function lookupRSVPByPhone(phone) {
         }
         return null;
     } catch (error) {
-        console.error('Error looking up RSVP:', error);
+        // Do not log sensitive data
+        console.error('Error looking up RSVP');
         return null;
     }
 }

@@ -11,15 +11,19 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="dashboard-body">
-    <!-- Password Protection Screen -->
+    <!-- Password Authentication Screen -->
     <div id="password-screen" class="password-screen">
         <div class="password-container">
             <div class="password-card">
                 <i class="fas fa-lock"></i>
                 <h2>Admin Access</h2>
-                <p>Please enter the password to access the dashboard</p>
+                <p>Please enter the dashboard password</p>
+                
                 <input type="password" id="dashboard-password" placeholder="Enter password">
-                <button onclick="checkPassword()" class="btn-primary">Access Dashboard</button>
+                <button onclick="checkPassword()" class="btn-primary">
+                    <i class="fas fa-sign-in-alt"></i> Access Dashboard
+                </button>
+                
                 <p class="password-error" id="password-error"></p>
             </div>
         </div>
@@ -215,7 +219,8 @@
     </section>
     </div><!-- End dashboard-content -->
 
+    <script src="../assets/js/config.js"></script>
     <script src="../assets/js/dashboard.js"></script>
-    <script src="../assets/js/dashboard-auth.js"></script>
+    <script src="../assets/js/dashboard-simple-auth.js"></script>
 </body>
 </html>
