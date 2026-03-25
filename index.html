@@ -154,6 +154,22 @@
                 </div>
                 
                 <div class="form-row">
+                    <div class="form-group full-width">
+                        <label>Are you attending? *</label>
+                        <div class="attendance-options">
+                            <label class="attendance-option">
+                                <input type="radio" name="attending" value="Yes" required onchange="handleAttendanceChange(this.value)">
+                                <span class="option-label"><i class="fas fa-check-circle"></i> Yes, I'll be there!</span>
+                            </label>
+                            <label class="attendance-option">
+                                <input type="radio" name="attending" value="No" required onchange="handleAttendanceChange(this.value)">
+                                <span class="option-label"><i class="fas fa-times-circle"></i> Sorry, can't make it</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-row" id="guest-count-row">
                     <div class="form-group">
                         <label for="adults">Number of Adults *</label>
                         <div class="counter-input">

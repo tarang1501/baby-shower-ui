@@ -83,13 +83,15 @@ function initializeRSVPForm() {
         
         // Get form data
         const formData = new FormData(form);
+        const attending = formData.get('attending');
         const guestData = {
             firstName: formData.get('firstName').trim(),
             lastName: formData.get('lastName').trim(),
             phone: formData.get('phone').trim(),
             email: formData.get('email').trim(),
-            adults: parseInt(formData.get('adults')) || 0,
-            kids: parseInt(formData.get('kids')) || 0,
+            attending: attending,
+            adults: attending === 'Yes' ? (parseInt(formData.get('adults')) || 0) : 0,
+            kids: attending === 'Yes' ? (parseInt(formData.get('kids')) || 0) : 0,
             note: formData.get('note').trim()
         };
         
@@ -164,7 +166,9 @@ function validateRSVPForm(data) {
     const errors = [];
     
     if (!data.firstName) errors.push('First name is required');
+    if (!data.lastName) errors.push('Last name is required');
     if (!data.phone) errors.push('Phone number is required');
+    if (!data.attending) errors.push('Please select whether you are attending');
     
     // Validate phone format
     if (data.phone && !isValidPhone(data.phone)) {
@@ -176,12 +180,14 @@ function validateRSVPForm(data) {
         errors.push('Please enter a valid email address');
     }
     
-    // Validate adults and kids are numbers
-    if (typeof data.adults !== 'number' || data.adults < 0) {
-        errors.push('Please enter a valid number of adults');
-    }
-    if (typeof data.kids !== 'number' || data.kids < 0) {
-        errors.push('Please enter a valid number of kids');
+    // Validate adults and kids only if attending
+    if (data.attending === 'Yes') {
+        if (typeof data.adults !== 'number' || data.adults < 0) {
+            errors.push('Please enter a valid number of adults');
+        }
+        if (typeof data.kids !== 'number' || data.kids < 0) {
+            errors.push('Please enter a valid number of kids');
+        }
     }
     
     if (errors.length > 0) {
@@ -372,6 +378,15 @@ function prefillRSVPForm(guestData) {
     form.querySelector('[name="lastName"]').value = guestData.lastName || '';
     form.querySelector('[name="phone"]').value = guestData.phone || '';
     form.querySelector('[name="email"]').value = guestData.email || '';
+    
+    // Set attendance radio
+    const attendingValue = guestData.attending || 'Yes';
+    const attendingRadio = form.querySelector(`[name="attending"][value="${attendingValue}"]`);
+    if (attendingRadio) {
+        attendingRadio.checked = true;
+        handleAttendanceChange(attendingValue);
+    }
+    
     form.querySelector('[name="adults"]').value = guestData.adults || 0;
     form.querySelector('[name="kids"]').value = guestData.kids || 0;
     form.querySelector('[name="note"]').value = guestData.note || '';
@@ -453,6 +468,12 @@ function updateCounter(fieldId, change) {
     const input = document.getElementById(fieldId);
     if (!input) return;
     
+    // Check if guest count row is disabled
+    const guestCountRow = document.getElementById('guest-count-row');
+    if (guestCountRow && guestCountRow.classList.contains('disabled')) {
+        return;
+    }
+    
     let value = parseInt(input.value) || 0;
     const min = parseInt(input.min) || 0;
     const max = parseInt(input.max) || 20;
@@ -464,6 +485,35 @@ function updateCounter(fieldId, change) {
     if (value > max) value = max;
     
     input.value = value;
+}
+
+// Handle attendance selection change
+function handleAttendanceChange(value) {
+    const guestCountRow = document.getElementById('guest-count-row');
+    const adultsInput = document.getElementById('adults');
+    const kidsInput = document.getElementById('kids');
+    
+    if (!guestCountRow || !adultsInput || !kidsInput) return;
+    
+    if (value === 'No') {
+        // Disable and set to 0
+        guestCountRow.classList.add('disabled');
+        adultsInput.value = 0;
+        kidsInput.value = 0;
+        
+        // Remove required attribute temporarily
+        adultsInput.removeAttribute('required');
+        kidsInput.removeAttribute('required');
+    } else {
+        // Enable
+        guestCountRow.classList.remove('disabled');
+        adultsInput.value = 1;
+        kidsInput.value = 0;
+        
+        // Add required attribute back
+        adultsInput.setAttribute('required', '');
+        kidsInput.setAttribute('required', '');
+    }
 }
 
 // Add phone formatting to input

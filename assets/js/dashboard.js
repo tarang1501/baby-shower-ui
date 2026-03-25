@@ -61,6 +61,8 @@ function updateStatistics() {
     
     // Update main statistics
     document.getElementById('total-rsvps').textContent = stats.totalRSVPs;
+    document.getElementById('attending-count').textContent = stats.attendingCount;
+    document.getElementById('not-attending-count').textContent = stats.notAttendingCount;
     document.getElementById('total-adults').textContent = stats.totalAdults;
     document.getElementById('total-kids').textContent = stats.totalKids;
     document.getElementById('total-guests').textContent = stats.totalGuests;
@@ -69,6 +71,8 @@ function updateStatistics() {
 function calculateStatistics() {
     const stats = {
         totalRSVPs: allGuests.length,
+        attendingCount: 0,
+        notAttendingCount: 0,
         totalAdults: 0,
         totalKids: 0,
         totalGuests: 0,
@@ -79,16 +83,23 @@ function calculateStatistics() {
     allGuests.forEach(guest => {
         const adults = parseInt(guest.adults) || 0;
         const kids = parseInt(guest.kids) || 0;
+        const attending = guest.attending === 'Yes';
         
-        stats.totalAdults += adults;
-        stats.totalKids += kids;
-        stats.totalGuests += adults + kids;
+        if (attending) {
+            stats.attendingCount++;
+            stats.totalAdults += adults;
+            stats.totalKids += kids;
+            stats.totalGuests += adults + kids;
+        } else {
+            stats.notAttendingCount++;
+        }
     });
     
-    // Calculate averages
-    if (stats.totalRSVPs > 0) {
-        stats.avgAdults = stats.totalAdults / stats.totalRSVPs;
-        stats.avgKids = stats.totalKids / stats.totalRSVPs;
+    // Calculate averages for attending guests only
+    const attendingRSVPs = stats.attendingCount;
+    if (attendingRSVPs > 0) {
+        stats.avgAdults = stats.totalAdults / attendingRSVPs;
+        stats.avgKids = stats.totalKids / attendingRSVPs;
     }
     
     return stats;
@@ -110,14 +121,20 @@ function renderGuestTable() {
     tbody.innerHTML = filteredGuests.map((guest, index) => {
         const status = guest.status || 'New';
         const statusClass = status === 'Updated' ? 'status-updated' : 'status-new';
+        const attending = guest.attending === 'Yes';
+        const attendingClass = attending ? 'attending-yes' : 'attending-no';
+        const attendingText = attending ? 'Yes' : 'No';
+        const totalPersons = attending ? (parseInt(guest.adults) || 0) + (parseInt(guest.kids) || 0) : 0;
         
         return `
         <tr data-index="${index}">
             <td>${escapeHtml(guest.firstName)} ${escapeHtml(guest.lastName)}</td>
             <td>${escapeHtml(guest.phone)}</td>
             <td>${escapeHtml(guest.email || 'N/A')}</td>
+            <td><span class="attendance-badge ${attendingClass}">${attendingText}</span></td>
             <td>${guest.adults}</td>
             <td>${guest.kids}</td>
+            <td>${totalPersons}</td>
             <td>${escapeHtml(guest.note || 'N/A')}</td>
             <td><span class="status-badge ${statusClass}">${status}</span></td>
             <td>${formatDate(guest.timestamp)}</td>
@@ -213,6 +230,7 @@ function initializeFilters() {
     const searchInput = document.getElementById('search-input');
     const adultsFilter = document.getElementById('filter-adults');
     const kidsFilter = document.getElementById('filter-kids');
+    const attendingFilter = document.getElementById('filter-attending');
     const clearFiltersBtn = document.getElementById('clear-filters');
     
     // Search functionality
@@ -221,6 +239,7 @@ function initializeFilters() {
     // Filter dropdowns
     adultsFilter.addEventListener('change', applyFilters);
     kidsFilter.addEventListener('change', applyFilters);
+    attendingFilter.addEventListener('change', applyFilters);
     
     // Clear filters
     clearFiltersBtn.addEventListener('click', clearFilters);
@@ -230,6 +249,7 @@ function applyFilters() {
     const searchTerm = document.getElementById('search-input').value.toLowerCase();
     const adultsFilter = document.getElementById('filter-adults').value;
     const kidsFilter = document.getElementById('filter-kids').value;
+    const attendingFilter = document.getElementById('filter-attending').value;
     
     filteredGuests = allGuests.filter(guest => {
         // Search filter
@@ -239,15 +259,30 @@ function applyFilters() {
             guest.phone.includes(searchTerm) ||
             (guest.email && guest.email.toLowerCase().includes(searchTerm));
         
-        // Adults filter
-        const matchesAdults = adultsFilter === 'all' || 
-            (adultsFilter === '4+' ? parseInt(guest.adults) >= 4 : guest.adults === adultsFilter);
+        // Adults filter - only apply to attending guests
+        let matchesAdults = true;
+        if (guest.attending === 'Yes') {
+            matchesAdults = adultsFilter === 'all' || 
+                (adultsFilter === '4+' ? parseInt(guest.adults) >= 4 : parseInt(guest.adults) === parseInt(adultsFilter));
+        } else if (adultsFilter !== 'all') {
+            // If filtering by adults and guest is not attending, they don't match
+            matchesAdults = false;
+        }
         
-        // Kids filter
-        const matchesKids = kidsFilter === 'all' || 
-            (kidsFilter === '3+' ? parseInt(guest.kids) >= 3 : guest.kids === kidsFilter);
+        // Kids filter - only apply to attending guests
+        let matchesKids = true;
+        if (guest.attending === 'Yes') {
+            matchesKids = kidsFilter === 'all' || 
+                (kidsFilter === '3+' ? parseInt(guest.kids) >= 3 : parseInt(guest.kids) === parseInt(kidsFilter));
+        } else if (kidsFilter !== 'all' && kidsFilter !== '0') {
+            // If filtering by kids > 0 and guest is not attending, they don't match
+            matchesAdults = false;
+        }
         
-        return matchesSearch && matchesAdults && matchesKids;
+        // Attending filter
+        const matchesAttending = attendingFilter === 'all' || guest.attending === attendingFilter;
+        
+        return matchesSearch && matchesAdults && matchesKids && matchesAttending;
     });
     
     // Apply current sort
@@ -260,6 +295,7 @@ function clearFilters() {
     document.getElementById('search-input').value = '';
     document.getElementById('filter-adults').value = 'all';
     document.getElementById('filter-kids').value = 'all';
+    document.getElementById('filter-attending').value = 'all';
     
     filteredGuests = [...allGuests];
     sortGuests();
@@ -323,6 +359,10 @@ function sortGuests() {
                 aValue = a.email || '';
                 bValue = b.email || '';
                 break;
+            case 'attending':
+                aValue = a.attending || '';
+                bValue = b.attending || '';
+                break;
             case 'adults':
                 aValue = parseInt(a.adults) || 0;
                 bValue = parseInt(b.adults) || 0;
@@ -358,19 +398,25 @@ function exportToCSV() {
     
     try {
         // Create CSV content
-        const headers = ['Name', 'Phone', 'Email', 'Adults', 'Kids', 'Message', 'Status', 'RSVP Date'];
+        const headers = ['Name', 'Phone', 'Email', 'Attending', 'Adults', 'Kids', 'Total', 'Message', 'Status', 'RSVP Date'];
         const csvContent = [
             headers.join(','),
-            ...filteredGuests.map(guest => [
-                `"${guest.firstName} ${guest.lastName}"`,
-                `"${guest.phone}"`,
-                `"${guest.email || ''}"`,
-                guest.adults,
-                guest.kids,
-                `"${(guest.note || '').replace(/"/g, '""')}"`,
-                `"${guest.status || 'New'}"`,
-                `"${formatDate(guest.timestamp)}"`
-            ].join(','))
+            ...filteredGuests.map(guest => {
+                const attending = guest.attending === 'Yes';
+                const total = attending ? (parseInt(guest.adults) || 0) + (parseInt(guest.kids) || 0) : 0;
+                return [
+                    `"${guest.firstName} ${guest.lastName}"`,
+                    `"${guest.phone}"`,
+                    `"${guest.email || ''}"`,
+                    guest.attending || 'No',
+                    guest.adults,
+                    guest.kids,
+                    total,
+                    `"${(guest.note || '').replace(/"/g, '""')}"`,
+                    `"${guest.status || 'New'}"`,
+                    `"${formatDate(guest.timestamp)}"`
+                ].join(',');
+            })
         ].join('\n');
         
         // Create download link
@@ -465,7 +511,7 @@ function showNotification(message, type) {
     }, 3000);
 }
 
-// Add CSS for side badges
+// Add CSS for side badges and attendance badges
 const sideBadgeStyles = document.createElement('style');
 sideBadgeStyles.textContent = `
     .side-badge {
@@ -496,6 +542,26 @@ sideBadgeStyles.textContent = `
     .side-badge.colleagues {
         background: #e8f5e8;
         color: #2e7d32;
+    }
+    
+    .attendance-badge {
+        display: inline-block;
+        padding: 0.35rem 0.85rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .attendance-badge.attending-yes {
+        background: #e8f5e8;
+        color: #2e7d32;
+    }
+    
+    .attendance-badge.attending-no {
+        background: #ffebee;
+        color: #c62828;
     }
     
     @keyframes slideInRight {

@@ -503,6 +503,88 @@ h1, h2, h3, h4 {
     box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.1);
 }
 
+/* Attendance Options Styles */
+.attendance-options {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.attendance-option {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    background: var(--bg-light);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex: 1;
+    min-width: 200px;
+}
+
+.attendance-option:hover {
+    border-color: var(--accent-sage);
+    background: var(--bg-white);
+}
+
+.attendance-option input[type="radio"] {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--primary-color);
+    cursor: pointer;
+}
+
+.attendance-option input[type="radio"]:checked + .option-label {
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+.attendance-option:has(input[type="radio"]:checked) {
+    border-color: var(--primary-color);
+    background: linear-gradient(135deg, rgba(139, 154, 139, 0.1) 0%, rgba(199, 169, 107, 0.1) 100%);
+    box-shadow: 0 4px 15px rgba(139, 154, 139, 0.15);
+}
+
+.option-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.05rem;
+    color: var(--text-dark);
+    transition: all 0.3s ease;
+}
+
+.option-label i {
+    font-size: 1.2rem;
+}
+
+.option-label .fa-check-circle {
+    color: var(--success-color);
+}
+
+.option-label .fa-times-circle {
+    color: var(--error-color);
+}
+
+/* Disabled state for guest count row */
+#guest-count-row.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    filter: grayscale(0.6);
+}
+
+#guest-count-row.disabled input {
+    background: var(--border-color);
+}
+
+#guest-count-row.disabled .counter-btn {
+    background: var(--border-color);
+    border-color: var(--text-light);
+    cursor: not-allowed;
+}
+
 /* Counter Input Styles - Premium Design */
 .counter-input {
     display: flex;
@@ -990,6 +1072,74 @@ h1, h2, h3, h4 {
 .status-updated {
     background: #fff3e0;
     color: #f57c00;
+}
+
+/* Attendance Badges */
+.side-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.side-badge.bride-side {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.side-badge.groom-side {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.side-badge.friends {
+    background: #f3e5f5;
+    color: #7b1fa2;
+}
+
+.side-badge.colleagues {
+    background: #e8f5e8;
+    color: #2e7d32;
+}
+
+.attendance-badge {
+    display: inline-block;
+    padding: 0.35rem 0.85rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.attendance-badge.attending-yes {
+    background: #e8f5e8;
+    color: #2e7d32;
+}
+
+.attendance-badge.attending-no {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.stat-icon.attending {
+    background: linear-gradient(135deg, #4caf50, #8bc34a);
+}
+
+.stat-icon.not-attending {
+    background: linear-gradient(135deg, #f44336, #ff9800);
+}
+
+.stat-icon.total {
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-gold));
+}
+
+.stat-card.highlight {
+    border: 2px solid var(--accent-gold);
+    box-shadow: 0 8px 30px rgba(199, 169, 107, 0.2);
 }
 
 /* Responsive Design - Cross-Browser Mobile Support */

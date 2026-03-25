@@ -62,12 +62,22 @@
         <div class="container">
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-users"></i>
+                    <div class="stat-icon attending">
+                        <i class="fas fa-check-circle"></i>
                     </div>
                     <div class="stat-content">
-                        <h3 class="stat-number" id="total-rsvps">0</h3>
-                        <p class="stat-label">Total RSVPs</p>
+                        <h3 class="stat-number" id="attending-count">0</h3>
+                        <p class="stat-label">Attending</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon not-attending">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 class="stat-number" id="not-attending-count">0</h3>
+                        <p class="stat-label">Not Attending</p>
                     </div>
                 </div>
                 
@@ -77,7 +87,7 @@
                     </div>
                     <div class="stat-content">
                         <h3 class="stat-number" id="total-adults">0</h3>
-                        <p class="stat-label">Total Adults</p>
+                        <p class="stat-label">Total Adults Attending</p>
                     </div>
                 </div>
                 
@@ -87,17 +97,27 @@
                     </div>
                     <div class="stat-content">
                         <h3 class="stat-number" id="total-kids">0</h3>
-                        <p class="stat-label">Total Kids</p>
+                        <p class="stat-label">Total Kids Attending</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card highlight">
+                    <div class="stat-icon total">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 class="stat-number" id="total-guests">0</h3>
+                        <p class="stat-label">Total People Attending</p>
                     </div>
                 </div>
                 
                 <div class="stat-card">
                     <div class="stat-icon">
-                        <i class="fas fa-users"></i>
+                        <i class="fas fa-clipboard-list"></i>
                     </div>
                     <div class="stat-content">
-                        <h3 class="stat-number" id="total-guests">0</h3>
-                        <p class="stat-label">Total Guests</p>
+                        <h3 class="stat-number" id="total-rsvps">0</h3>
+                        <p class="stat-label">Total RSVPs</p>
                     </div>
                 </div>
             </div>
@@ -132,6 +152,15 @@
                         <option value="1">1 Kid</option>
                         <option value="2">2 Kids</option>
                         <option value="3">3+ Kids</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="filter-attending">Attendance:</label>
+                    <select id="filter-attending">
+                        <option value="all">All</option>
+                        <option value="Yes">Attending</option>
+                        <option value="No">Not Attending</option>
                     </select>
                 </div>
                 
@@ -176,6 +205,7 @@
                                         <i class="fas fa-sort"></i>
                                     </button>
                                 </th>
+                                <th>Attending</th>
                                 <th>
                                     <button class="sort-btn" data-sort="adults">
                                         Adults
@@ -188,6 +218,7 @@
                                         <i class="fas fa-sort"></i>
                                     </button>
                                 </th>
+                                <th>Total</th>
                                 <th>Message</th>
                                 <th>Status</th>
                                 <th>
