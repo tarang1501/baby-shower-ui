@@ -3,19 +3,18 @@
 // Frontend security is limited; backend validation required
 
 window.APP_CONFIG = {
-    // Google Apps Script Web App URL - Replace with your deployed script URL
-    SCRIPT_URL: "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE",
+    // Google Apps Script Web App URL
+    SCRIPT_URL: "https://script.google.com/macros/s/AKfycbw-yzcqREvIFurqt7MHOHo_WN9MVkgXu3oOFgDbGMzkDBWQqruEdjwJEsOKgbtwU9BU/exec",
     
     // Secret key for API validation (backend must validate)
-    // Change this in both frontend and backend to match
-    SECRET_KEY: "YOUR_SECRET_KEY_HERE",
+    SECRET_KEY: "MALANI_RSVP_2026_SECURE",
     
-    // Event details - Update these for your event
-    EVENT_DATE: "YYYY-MM-DDTHH:MM:SS",
-    EVENT_TITLE: "Your Event Title",
+    // Event details
+    EVENT_DATE: "2026-06-28T10:00:00",
+    EVENT_TITLE: "Tarang & Vidhi Baby Shower",
     
     // Dashboard auth session key
-    AUTH_SESSION_KEY: "yourEventAuth",
+    AUTH_SESSION_KEY: "babyShowerAuth",
     
     // Reminder schedule (in days before event)
     REMINDER_SCHEDULE: [30, 7, 1]

@@ -124,7 +124,11 @@ function renderGuestTable() {
         const attending = guest.attending === 'Yes';
         const attendingClass = attending ? 'attending-yes' : 'attending-no';
         const attendingText = attending ? 'Yes' : 'No';
-        const totalPersons = attending ? (parseInt(guest.adults) || 0) + (parseInt(guest.kids) || 0) : 0;
+        // Use totalAttendingPersons from API or calculate
+        const totalPersons = guest.totalAttendingPersons || (attending ? (parseInt(guest.adults) || 0) + (parseInt(guest.kids) || 0) : 0);
+        // Email and calendar status
+        const emailSent = guest.confirmationEmailSent === true || guest.confirmationEmailSent === 'TRUE' || guest.confirmationEmailSent === 'true';
+        const calendarSent = guest.calendarInviteSent === true || guest.calendarInviteSent === 'TRUE' || guest.calendarInviteSent === 'true';
         
         return `
         <tr data-index="${index}">
@@ -135,6 +139,8 @@ function renderGuestTable() {
             <td>${guest.adults}</td>
             <td>${guest.kids}</td>
             <td>${totalPersons}</td>
+            <td>${emailSent ? '<i class="fas fa-check-circle" style="color: #4caf50;"></i> Yes' : '<i class="fas fa-times-circle" style="color: #999;"></i> No'}</td>
+            <td>${calendarSent ? '<i class="fas fa-check-circle" style="color: #4caf50;"></i> Yes' : '<i class="fas fa-times-circle" style="color: #999;"></i> No'}</td>
             <td>${escapeHtml(guest.note || 'N/A')}</td>
             <td><span class="status-badge ${statusClass}">${status}</span></td>
             <td>${formatDate(guest.timestamp)}</td>
@@ -398,12 +404,17 @@ function exportToCSV() {
     
     try {
         // Create CSV content
-        const headers = ['Name', 'Phone', 'Email', 'Attending', 'Adults', 'Kids', 'Total', 'Message', 'Status', 'RSVP Date'];
+        const headers = ['Name', 'Phone', 'Email', 'Attending', 'Adults', 'Kids', 'Total', 'Email Sent', 'Calendar Sent', 'Message', 'Status', 'RSVP Date'];
         const csvContent = [
             headers.join(','),
             ...filteredGuests.map(guest => {
                 const attending = guest.attending === 'Yes';
-                const total = attending ? (parseInt(guest.adults) || 0) + (parseInt(guest.kids) || 0) : 0;
+                const totalFromAPI = parseInt(guest.totalAttendingPersons) || 0;
+                const totalCalculated = attending ? (parseInt(guest.adults) || 0) + (parseInt(guest.kids) || 0) : 0;
+                const total = totalFromAPI > 0 ? totalFromAPI : totalCalculated;
+                // Email and calendar status
+                const emailSent = guest.confirmationEmailSent === true || guest.confirmationEmailSent === 'TRUE' || guest.confirmationEmailSent === 'true';
+                const calendarSent = guest.calendarInviteSent === true || guest.calendarInviteSent === 'TRUE' || guest.calendarInviteSent === 'true';
                 return [
                     `"${guest.firstName} ${guest.lastName}"`,
                     `"${guest.phone}"`,
@@ -412,6 +423,8 @@ function exportToCSV() {
                     guest.adults,
                     guest.kids,
                     total,
+                    emailSent ? 'Yes' : 'No',
+                    calendarSent ? 'Yes' : 'No',
                     `"${(guest.note || '').replace(/"/g, '""')}"`,
                     `"${guest.status || 'New'}"`,
                     `"${formatDate(guest.timestamp)}"`

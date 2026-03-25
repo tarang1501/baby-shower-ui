@@ -269,17 +269,11 @@ function initializeMusicToggle() {
     
     if (!musicToggle || !backgroundMusic) return;
     
-    // Try to autoplay on page load
-    backgroundMusic.volume = 0.5; // Set volume to 50%
-    backgroundMusic.play().then(() => {
-        // Autoplay succeeded
-        isPlaying = true;
-        musicToggle.classList.add('playing');
-        musicToggle.innerHTML = '<i class="fas fa-pause"></i>';
-    }).catch(error => {
-        // Autoplay blocked by browser, wait for user interaction
-        console.log('Music autoplay blocked:', error);
-    });
+    // Set initial volume
+    backgroundMusic.volume = 0.5;
+    
+    // Note: Autoplay is blocked by browsers until user interaction
+    // User must click the music button to start playback
     
     musicToggle.addEventListener('click', function() {
         if (isPlaying) {
