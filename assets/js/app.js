@@ -16,6 +16,8 @@ function initializeApp() {
     initializeRSVPForm();
     initializeMusicToggle();
     initializeScrollEffects();
+    initializeAttendanceSelector();
+    checkSavedRSVPState();
 }
 
 // Load guests from localStorage or fallback to JSON
@@ -40,8 +42,8 @@ async function loadGuests() {
 
 // Countdown Timer
 function initializeCountdown() {
-    // Set the event date (June 28, 2026, 9:30 AM)
-    const eventDate = new Date('June 28, 2026 09:30:00').getTime();
+    // Use EVENT_DATE from config
+    const eventDate = new Date(window.APP_CONFIG.EVENT_DATE).getTime();
     
     function updateCountdown() {
         const now = new Date().getTime();
@@ -111,10 +113,17 @@ function initializeRSVPForm() {
             const response = await submitToGoogleSheets(guestData);
             
             if (response.success) {
-                // Show success message
-                showSuccessMessage(response.message || 'Thank you! Your RSVP has been received.');
+                // Save state to sessionStorage
+                sessionStorage.setItem('rsvpSubmitted', 'true');
                 
-                // Reset form
+                // Show success state with premium thank-you card
+                form.style.display = 'none';
+                if (successMessage) {
+                    successMessage.classList.add('show');
+                    successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                
+                // Reset form for next time
                 form.reset();
             } else {
                 showError(response.message || 'There was an error submitting your RSVP. Please try again.');
@@ -212,21 +221,11 @@ function isValidEmail(email) {
 function showSuccessMessage(message = 'Thank you! Your RSVP has been received.') {
     const successMessage = document.getElementById('success-message');
     
-    // Update message text
-    const messageEl = successMessage.querySelector('p') || successMessage;
-    if (messageEl.tagName === 'P') {
-        messageEl.textContent = message;
+    // Note: With premium UI, success message shows as a card replacing the form
+    if (successMessage) {
+        successMessage.classList.add('show');
+        successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
-    
-    successMessage.classList.add('show');
-    
-    // Scroll to success message
-    successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    
-    // Hide after 5 seconds
-    setTimeout(() => {
-        successMessage.classList.remove('show');
-    }, 5000);
 }
 
 function showError(message) {
@@ -402,6 +401,106 @@ function showUpdateModeIndicator() {
     if (form) form.insertBefore(indicator, form.firstChild);
 }
 
+// Initialize attendance selector with class-based toggling for cross-browser support
+function initializeAttendanceSelector() {
+    const attendanceOptions = document.querySelectorAll('.attendance-option');
+    
+    attendanceOptions.forEach(option => {
+        const radio = option.querySelector('input[type="radio"]');
+        if (!radio) return;
+        
+        // Handle click on the option container
+        option.addEventListener('click', function(e) {
+            if (e.target === radio) return;
+            radio.checked = true;
+            updateAttendanceClasses();
+            handleAttendanceChange(radio.value);
+        });
+        
+        // Handle direct radio change
+        radio.addEventListener('change', function() {
+            updateAttendanceClasses();
+            handleAttendanceChange(this.value);
+        });
+    });
+    
+    // Initial state update
+    updateAttendanceClasses();
+}
+
+// Update visual classes for all attendance options
+function updateAttendanceClasses() {
+    const options = document.querySelectorAll('.attendance-option');
+    options.forEach(option => {
+        const radio = option.querySelector('input[type="radio"]');
+        if (!radio) return;
+        
+        // Remove all selected classes first
+        option.classList.remove('selected-yes', 'selected-no');
+        
+        // Add appropriate class based on selection
+        if (radio.checked) {
+            if (radio.value === 'Yes') {
+                option.classList.add('selected-yes');
+            } else if (radio.value === 'No') {
+                option.classList.add('selected-no');
+            }
+        }
+    });
+}
+
+// Check for saved RSVP state (sessionStorage persistence)
+function checkSavedRSVPState() {
+    const savedState = sessionStorage.getItem('rsvpSubmitted');
+    if (savedState === 'true') {
+        showSuccessState();
+    }
+}
+
+// Show success state (form hidden, thank you shown)
+function showSuccessState() {
+    const form = document.getElementById('rsvp-form');
+    const successMessage = document.getElementById('success-message');
+    
+    if (form) form.style.display = 'none';
+    if (successMessage) {
+        successMessage.classList.add('show');
+        successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+// Reset RSVP form for new submission
+function resetRSVPForm() {
+    const form = document.getElementById('rsvp-form');
+    const successMessage = document.getElementById('success-message');
+    
+    if (successMessage) {
+        successMessage.classList.remove('show');
+    }
+    
+    if (form) {
+        form.reset();
+        form.style.display = 'block';
+        
+        // Reset attendance selector classes
+        document.querySelectorAll('.attendance-option').forEach(opt => {
+            opt.classList.remove('selected-yes', 'selected-no');
+        });
+        
+        // Reset guest count row
+        const guestCountRow = document.getElementById('guest-count-row');
+        if (guestCountRow) {
+            guestCountRow.classList.remove('disabled');
+        }
+        
+        // Scroll to form
+        form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    
+    // Clear saved state
+    sessionStorage.removeItem('rsvpSubmitted');
+}
+
 // Edit RSVP UI Handlers
 function showEditLookup(event) {
     event.preventDefault();
@@ -508,6 +607,9 @@ function handleAttendanceChange(value) {
         adultsInput.setAttribute('required', '');
         kidsInput.setAttribute('required', '');
     }
+    
+    // Update visual classes for cross-browser support
+    updateAttendanceClasses();
 }
 
 // Add phone formatting to input

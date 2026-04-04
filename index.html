@@ -29,10 +29,18 @@
                 <div class="decorative-line"></div>
                 <p class="celebration-title">Celebration</p>
                 <p class="celebration-text">Join us to celebrate this joyous occasion and welcome the little one with love</p>
+                
+                <!-- Prominent RSVP Button -->
+                <a href="#rsvp" class="btn-rsvp-pulse" onclick="document.getElementById('rsvp').scrollIntoView({behavior: 'smooth'}); return false;">
+                    <i class="fas fa-envelope-open-text"></i>
+                    RSVP Now
+                </a>
+                <p class="rsvp-deadline-note">Kindly respond by May 10, 2026</p>
             </div>
             
-            <div class="scroll-indicator" onclick="document.getElementById('details').scrollIntoView({behavior: 'smooth'})" style="cursor: pointer;">
+            <div class="scroll-indicator" onclick="document.getElementById('rsvp').scrollIntoView({behavior: 'smooth'})" style="cursor: pointer;">
                 <i class="fas fa-chevron-down"></i>
+                <span class="scroll-text">Scroll to RSVP</span>
             </div>
         </div>
         
@@ -113,12 +121,26 @@
     <!-- RSVP Section -->
     <section class="rsvp-section" id="rsvp">
         <div class="container">
-            <h3 class="section-title">Be Our Guest</h3>
+            <div class="rsvp-header">
+                <h3 class="section-title">Be Our Guest</h3>
+                <div class="rsvp-badge">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>Please RSVP</span>
+                </div>
+            </div>
             <p class="rsvp-subtitle">Kindly RSVP by May 10, 2026</p>
             
             <div class="welcome-message">
                 <p>With hearts full of joy and excitement, the Malani Family invites you to celebrate the upcoming arrival of Tarang & Vidhi's little one. Join us for a beautiful celebration filled with love, laughter, and blessings as we prepare to welcome this precious blessing into our lives.</p>
                 <p>Your presence will make this celebration truly special as we gather to share in the joy and create cherished memories together.</p>
+            </div>
+            
+            <!-- Registry Section -->
+            <div class="registry-section">
+                <div class="registry-content">
+                    <i class="fas fa-gift"></i>
+                    <p>Your presence is the greatest gift to us. If you would like to bless us with a gift, please visit our <a href="https://www.amazon.com/baby-reg/tarangkumar-malani-september-2026-delaware/2NYCI25293J55?ref_=cm_sw_r_cp_ud_dp_QMYCCG1EMP155KJ8M76F" target="_blank" rel="noopener noreferrer" class="registry-link">Registry</a>.</p>
+                </div>
             </div>
             
             <!-- Edit RSVP Section -->
@@ -128,6 +150,16 @@
                     <input type="tel" id="lookup-phone" placeholder="Enter your phone number">
                     <button type="button" class="btn-secondary" onclick="handleEditLookup()">Find My RSVP</button>
                 </div>
+            </div>
+            
+            <!-- Event Snapshot -->
+            <div class="event-snapshot">
+                <i class="fas fa-calendar-day"></i>
+                <span>Sunday, June 28, 2026</span>
+                <span class="dot">•</span>
+                <span>10:00 AM onwards</span>
+                <span class="dot">•</span>
+                <span>Homestead of Radnor</span>
             </div>
             
             <form class="rsvp-form" id="rsvp-form">
@@ -159,10 +191,12 @@
                         <div class="attendance-options">
                             <label class="attendance-option">
                                 <input type="radio" name="attending" value="Yes" required onchange="handleAttendanceChange(this.value)">
+                                <span class="radio-circle"></span>
                                 <span class="option-label"><i class="fas fa-check-circle"></i> Yes, I'll be there!</span>
                             </label>
                             <label class="attendance-option">
                                 <input type="radio" name="attending" value="No" required onchange="handleAttendanceChange(this.value)">
+                                <span class="radio-circle"></span>
                                 <span class="option-label"><i class="fas fa-times-circle"></i> Sorry, can't make it</span>
                             </label>
                         </div>
@@ -200,9 +234,22 @@
             </form>
             
             <div class="success-message" id="success-message">
-                <i class="fas fa-check-circle"></i>
-                <h4>Thank You!</h4>
-                <p>Your RSVP has been received. We can't wait to celebrate with you!</p>
+                <div class="success-content">
+                    <div class="success-icon-wrapper">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h4>Thank You!</h4>
+                    <p class="success-main-text">Your RSVP has been received.</p>
+                    <p class="success-sub-text">We can't wait to celebrate with you!</p>
+                    <div class="success-registry-note">
+                        <i class="fas fa-gift"></i>
+                        <p>Your presence is the greatest gift to us. If you would like to bless us with a gift, please visit our <a href="https://www.amazon.com/baby-reg/tarangkumar-malani-september-2026-delaware/2NYCI25293J55?ref_=cm_sw_r_cp_ud_dp_QMYCCG1EMP155KJ8M76F" target="_blank" rel="noopener noreferrer" class="registry-link">Registry</a>.</p>
+                    </div>
+                    <button type="button" class="btn-new-rsvp" onclick="resetRSVPForm()">
+                        <i class="fas fa-plus"></i>
+                        Submit Another RSVP
+                    </button>
+                </div>
             </div>
         </div>
     </section>

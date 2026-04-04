@@ -4,7 +4,7 @@
 
 window.APP_CONFIG = {
     // Google Apps Script Web App URL
-    SCRIPT_URL: "https://script.google.com/macros/s/AKfycbw-yzcqREvIFurqt7MHOHo_WN9MVkgXu3oOFgDbGMzkDBWQqruEdjwJEsOKgbtwU9BU/exec",
+    SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzc8rO36NNIHHnD98sTyTt3eLCvw4xEkl2r2A4VGLVU2vWRiGjXWtoqWcgZ_pq0Hkvp/exec",
     
     // Secret key for API validation (backend must validate)
     SECRET_KEY: "MALANI_RSVP_2026_SECURE",
