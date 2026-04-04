@@ -501,6 +501,24 @@ function resetRSVPForm() {
     sessionStorage.removeItem('rsvpSubmitted');
 }
 
+// Clear saved state and show form (for "Update your response" button)
+function clearSavedStateAndShowForm() {
+    const form = document.getElementById('rsvp-form');
+    const successMessage = document.getElementById('success-message');
+    
+    if (successMessage) {
+        successMessage.classList.remove('show');
+    }
+    
+    if (form) {
+        form.style.display = 'block';
+        form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    
+    // Clear saved state from sessionStorage
+    sessionStorage.removeItem('rsvpSubmitted');
+}
+
 // Edit RSVP UI Handlers
 function showEditLookup(event) {
     event.preventDefault();
