@@ -342,8 +342,30 @@ h1, h2, h3, h4 {
     font-weight: 400;
 }
 
-.venue-button {
+/* Venue Button Inline (in RSVP section) */
+.venue-button-inline {
     text-align: center;
+    margin-bottom: 2rem;
+}
+
+.venue-button-inline .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1.75rem;
+    font-size: 0.95rem;
+    background: var(--bg-white);
+    color: var(--secondary-color);
+    border: 2px solid var(--border-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.venue-button-inline .btn-primary:hover {
+    background: var(--secondary-color);
+    color: var(--bg-white);
+    border-color: var(--secondary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(122, 158, 122, 0.25);
 }
 
 /* Premium Button Styles */
@@ -451,36 +473,12 @@ h1, h2, h3, h4 {
     letter-spacing: 0.3px;
 }
 
-/* RSVP Header with Badge */
+/* RSVP Header */
 .rsvp-header {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1rem;
     margin-bottom: 0.5rem;
-}
-
-.rsvp-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: linear-gradient(135deg, var(--accent-sage), var(--accent-gold));
-    color: white;
-    padding: 0.6rem 1.25rem;
-    border-radius: 50px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    box-shadow: 0 4px 15px rgba(139, 154, 139, 0.3);
-    animation: pulse-badge 2s infinite;
-}
-
-@keyframes pulse-badge {
-    0%, 100% { box-shadow: 0 4px 15px rgba(139, 154, 139, 0.3); }
-    50% { box-shadow: 0 6px 20px rgba(139, 154, 139, 0.5); }
-}
-
-.rsvp-badge i {
-    font-size: 1rem;
 }
 
 .gift-note {
